@@ -1,4 +1,4 @@
-﻿name: pesaloan
+name: pesaloan
 description: PesaLoan - Kenya's Digital Lending Platform
 version: 1.0.0+1
 publish_to: 'none'
@@ -71,7 +71,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^6.0.0
   riverpod_generator: ^2.3.9
   build_runner: ^2.4.7
   freezed: ^2.4.6
