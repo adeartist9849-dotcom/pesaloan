@@ -1,4 +1,4 @@
-﻿name: pesaloan
+name: pesaloan
 description: PesaLoan - Kenya's Digital Lending Platform
 version: 1.0.0+1
 publish_to: 'none'
@@ -33,7 +33,7 @@ dependencies:
   # UI & Utilities
   intl: ^0.20.3
   url_launcher: ^6.2.2
-  permission_handler: ^11.1.0
+  permission_handler: ^13.0.2
   device_info_plus: ^9.1.1
   package_info_plus: ^4.2.0
   connectivity_plus: ^5.0.2
