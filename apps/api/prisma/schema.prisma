@@ -1,0 +1,442 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  BLOCKED
+}
+
+enum KycStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PENDING_REVIEW
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum LoanApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  DECLINED
+  CANCELLED
+  EXPIRED
+}
+
+enum LoanStatus {
+  APPLICATION
+  PENDING
+  APPROVED
+  ACCEPTED
+  DISBURSEMENT_PENDING
+  ACTIVE
+  PAID
+  OVERDUE
+  RESOLVED
+  DEFAULTED
+  WRITTEN_OFF
+}
+
+enum RepaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum TransactionType {
+  DISBURSEMENT
+  REPAYMENT
+  FEE
+  PENALTY
+  REFUND
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum NotificationType {
+  OTP
+  APPLICATION_SUBMITTED
+  APPLICATION_APPROVED
+  APPLICATION_DECLINED
+  LOAN_DISBURSED
+  PAYMENT_RECEIVED
+  UPCOMING_REPAYMENT
+  LOAN_OVERDUE
+  LOAN_FULLY_REPAID
+  KYC_VERIFIED
+  KYC_REJECTED
+  ACCOUNT_SUSPENDED
+  GENERAL
+}
+
+enum NotificationChannel {
+  PUSH
+  SMS
+  EMAIL
+  IN_APP
+}
+
+enum MobileMoneyProvider {
+  MPESA
+  AIRTEL_MONEY
+}
+
+enum AuditAction {
+  USER_REGISTERED
+  USER_LOGIN
+  USER_LOGOUT
+  PIN_CHANGED
+  PASSWORD_RESET
+  KYC_SUBMITTED
+  KYC_VERIFIED
+  KYC_REJECTED
+  KYC_MANUAL_REVIEW
+  LOAN_APPLICATION_SUBMITTED
+  LOAN_APPLICATION_APPROVED
+  LOAN_APPLICATION_DECLINED
+  LOAN_APPLICATION_MANUAL_REVIEW
+  LOAN_OFFER_ACCEPTED
+  LOAN_OFFER_DECLINED
+  LOAN_DISBURSED
+  LOAN_REPAYMENT_INITIATED
+  LOAN_REPAYMENT_COMPLETED
+  LOAN_REPAYMENT_FAILED
+  LOAN_OVERDUE
+  LOAN_SETTLED
+  LOAN_DEFAULTED
+  ADMIN_LOGIN
+  CUSTOMER_SUSPENDED
+  CUSTOMER_REACTIVATED
+  LOAN_MANUALLY_APPROVED
+  LOAN_MANUALLY_DECLINED
+  CREDIT_RULES_UPDATED
+  REFUND_PROCESSED
+}
+
+model User {
+  id                       String    @id @default(cuid())
+  phoneNumber              String    @unique
+  fullName                 String
+  dateOfBirth              DateTime
+  nationalId               String    @unique
+  email                    String?   @unique
+  pinHash                  String
+  status                   UserStatus @default(PENDING)
+  kycStatus                KycStatus @default(NOT_STARTED)
+  loanLimit                Int       @default(0)
+  registrationFeePaid      Boolean   @default(false)
+  registrationFeePaidAt    DateTime?
+  lastLoginAt              DateTime?
+  failedLoginAttempts      Int       @default(0)
+  lockedUntil              DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  
+  kycRecord                KycRecord?
+  loanApplications         LoanApplication[]
+  loans                    Loan[]
+  repayments               Repayment[]
+  transactions             Transaction[]
+  notifications            Notification[]
+  auditLogs                AuditLog[] @relation("UserAuditLogs")
+  registrationFeePayments  RegistrationFeePayment[]
+  
+  @@index([phoneNumber])
+  @@index([nationalId])
+  @@index([status])
+  @@index([kycStatus])
+  @@index([registrationFeePaid])
+}
+
+model KycRecord {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status              KycStatus @default(NOT_STARTED)
+  provider            String
+  providerReference   String
+  verificationData    Json
+  verifiedAt          DateTime?
+  rejectedAt          DateTime?
+  rejectionReason     String?
+  expiresAt           DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@index([status])
+  @@index([providerReference])
+}
+
+model LoanApplication {
+  id                String                @id @default(cuid())
+  userId            String
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestedAmount   Int
+  requestedTermDays Int
+  status            LoanApplicationStatus @default(DRAFT)
+  score             Int?
+  decisionReason    String?
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  expiresAt         DateTime
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  
+  loan              Loan?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Loan {
+  id                    String      @id @default(cuid())
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId         String      @unique
+  application           LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  principal             Int
+  interest              Int
+  fees                  Int
+  totalPayable          Int
+  termDays              Int
+  disbursedAmount       Int         @default(0)
+  outstandingBalance    Int
+  status                LoanStatus  @default(APPLICATION)
+  disbursedAt           DateTime?
+  dueDate               DateTime
+  paidAt                DateTime?
+  agreementVersion      String
+  agreementAcceptedAt   DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  
+  repayments            Repayment[]
+  transactions          Transaction[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([applicationId])
+}
+
+model Repayment {
+  id                      String             @id @default(cuid())
+  loanId                  String
+  loan                    Loan               @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  userId                  String
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount                  Int
+  transactionReference    String             @unique
+  provider                MobileMoneyProvider
+  providerTransactionId   String?
+  status                  RepaymentStatus    @default(PENDING)
+  paidAt                  DateTime?
+  failedReason            String?
+  metadata                Json
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  
+  @@index([loanId])
+  @@index([userId])
+  @@index([status])
+  @@index([transactionReference])
+  @@index([providerTransactionId])
+}
+
+model Transaction {
+  id                  String              @id @default(cuid())
+  loanId              String?
+  loan                Loan?               @relation(fields: [loanId], references: [id], onDelete: SetNull)
+  userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type                TransactionType
+  amount              Int
+  status              TransactionStatus   @default(PENDING)
+  reference           String              @unique
+  provider            MobileMoneyProvider?
+  providerReference   String?
+  description         String
+  metadata            Json
+  processedAt         DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
+  @@index([loanId])
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([reference])
+  @@index([providerReference])
+  @@index([createdAt])
+}
+
+model Notification {
+  id          String               @id @default(cuid())
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  channel     NotificationChannel
+  title       String
+  body        String
+  data        Json
+  sentAt      DateTime?
+  readAt      DateTime?
+  failedReason String?
+  retryCount  Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@index([sentAt])
+  @@index([readAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  adminId     String?
+  action      AuditAction
+  entityType  String
+  entityId    String
+  oldValues   Json?
+  newValues   Json?
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([adminId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model CreditRules {
+  id                      String   @id @default(cuid())
+  minLoanAmount           Int      @default(500)
+  maxLoanAmount           Int      @default(50000)
+  minTermDays             Int      @default(7)
+  maxTermDays             Int      @default(90)
+  interestRate            Float    @default(15.0) // annual percentage
+  processingFeeRate       Float    @default(5.0)  // percentage
+  lateFeeRate             Float    @default(1.0)  // percentage per day
+  maxLoanToLimitRatio     Float    @default(1.0)  // 0-1
+  minCreditScore          Int      @default(0)
+  maxActiveLoans          Int      @default(1)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  @@index([id])
+}
+
+model OTP {
+  id          String   @id @default(cuid())
+  phoneNumber String
+  code        String
+  purpose     String   // "registration", "login", "pin_reset"
+  expiresAt   DateTime
+  attempts    Int      @default(0)
+  used        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  @@index([phoneNumber, purpose])
+  @@index([expiresAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AdminUser {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  passwordHash  String
+  fullName      String
+  role          String      @default("VIEWER")
+  permissions   String[]
+  lastLoginAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@index([email])
+}
+
+enum PaymentDestinationType {
+  MPESA_TILL
+  MPESA_PAYBILL
+  BANK_ACCOUNT
+  MOBILE_MONEY
+}
+
+model RegistrationFee {
+  id                      String                @id @default(cuid())
+  amount                  Int                   @default(10000) // in cents (KES)
+  currency                String                @default("KES")
+  isActive                Boolean               @default(true)
+  description             String?               // e.g., "One-time registration fee"
+  
+  // Payment destination configuration
+  destinationType         PaymentDestinationType @default(MPESA_TILL)
+  destinationAccount      String                // Till number, Paybill number, or bank account number
+  destinationName         String?               // e.g., "PesaLoan Main Till", "KCB Bank Account"
+  destinationBranch       String?               // Bank branch code (for bank accounts)
+  destinationReference    String?               // Account name or reference for bank transfers
+  
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  
+  @@index([isActive])
+}
+
+model RegistrationFeePayment {
+  id                  String              @id @default(cuid())
+  userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount              Int
+  currency            String              @default("KES")
+  status              TransactionStatus   @default(PENDING)
+  provider            MobileMoneyProvider?
+  providerReference   String?
+  reference           String              @unique
+  description         String
+  metadata            Json
+  processedAt         DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([reference])
+  @@index([providerReference])
+}

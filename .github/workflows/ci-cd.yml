@@ -1,0 +1,203 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  FLUTTER_VERSION: '3.16.0'
+
+jobs:
+  # Shared package tests
+  shared-tests:
+    name: Shared Package Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci --workspace=packages/shared
+      - name: Run linting
+        run: npm run lint --workspace=packages/shared
+      - name: Run tests
+        run: npm run test --workspace=packages/shared
+      - name: Build
+        run: npm run build --workspace=packages/shared
+
+  # API tests
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mkopo_extra_test
+        ports: 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci --workspace=apps/api --workspace=packages/shared
+      - name: Generate Prisma Client
+        run: cd apps/api && npx prisma generate
+      - name: Run migrations
+        run: cd apps/api && npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mkopo_extra_test
+      - name: Run linting
+        run: npm run lint --workspace=apps/api
+      - name: Run tests
+        run: npm run test --workspace=apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mkopo_extra_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret
+          ENCRYPTION_KEY: test-encryption-key-32-chars-long!!
+      - name: Build
+        run: npm run build --workspace=apps/api
+
+  # Admin tests
+  admin-tests:
+    name: Admin Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci --workspace=apps/admin --workspace=packages/shared
+      - name: Run linting
+        run: npm run lint --workspace=apps/admin
+      - name: Run tests
+        run: npm run test --workspace=apps/admin
+      - name: Build
+        run: npm run build --workspace=apps/admin
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000
+
+  # Mobile tests
+  mobile-tests:
+    name: Mobile Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+      - name: Install dependencies
+        run: cd apps/mobile && flutter pub get
+      - name: Generate code
+        run: cd apps/mobile && flutter pub run build_runner build --delete-conflicting-outputs
+      - name: Analyze
+        run: cd apps/mobile && flutter analyze
+      - name: Run tests
+        run: cd apps/mobile && flutter test
+      # Note: Building APK/IPA requires additional setup (signing keys, etc.)
+      # Uncomment when ready for release builds
+      # - name: Build APK
+      #   run: cd apps/mobile && flutter build apk --release
+
+  # Security scan
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Docker build test
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [api-tests, admin-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          tags: mkopo-api:test
+          load: true
+      - name: Build Admin image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/admin/Dockerfile
+          push: false
+          tags: mkopo-admin:test
+          load: true
+
+  # Deploy to staging (manual approval)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [api-tests, admin-tests, mobile-tests, docker-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Deploy to staging
+        run: |
+          echo "Deploy to staging environment"
+          # Add your staging deployment commands here
+          # e.g., kubectl apply, docker-compose up, etc.
+
+  # Deploy to production (manual approval)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [api-tests, admin-tests, mobile-tests, docker-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Deploy to production
+        run: |
+          echo "Deploy to production environment"
+          # Add your production deployment commands here
+          # This should require manual approval in GitHub Environments

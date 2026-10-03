@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.PesaLoan" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/primary_green</item>
+        <item name="colorPrimaryVariant">@color/primary_green_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/accent_orange</item>
+        <item name="colorSecondaryVariant">@color/accent_orange_light</item>
+        <item name="colorOnSecondary">@color/white</item>
+        
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/primary_green</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        
+        <!-- Background -->
+        <item name="android:windowBackground">@color/background_light</item>
+        <item name="colorSurface">@color/surface_light</item>
+        <item name="colorOnSurface">@color/text_primary_light</item>
+        
+        <!-- Error -->
+        <item name="colorError">@color/error_red</item>
+        <item name="colorOnError">@color/white</item>
+        
+        <!-- Typography -->
+        <item name="android:textColorPrimary">@color/text_primary_light</item>
+        <item name="android:textColorSecondary">@color/text_secondary_light</item>
+        
+        <!-- Shape -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.PesaLoan.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.PesaLoan.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.PesaLoan.Large</item>
+    </style>
+    
+    <!-- Launch theme (shown before Flutter renders) -->
+    <style name="LaunchTheme" parent="Theme.PesaLoan">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+    
+    <!-- Light theme -->
+    <style name="Theme.PesaLoan.Light" parent="Theme.PesaLoan">
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+    
+    <!-- Dark theme -->
+    <style name="Theme.PesaLoan.Dark" parent="Theme.PesaLoan">
+        <item name="android:forceDarkAllowed">true</item>
+        <item name="colorPrimary">@color/primary_green_light</item>
+        <item name="colorPrimaryVariant">@color/primary_green</item>
+        <item name="android:statusBarColor">@color/status_bar_dark</item>
+        <item name="android:navigationBarColor">@color/navigation_bar_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/text_primary_dark</item>
+    </style>
+    
+    <!-- Shape appearances -->
+    <style name="ShapeAppearance.PesaLoan.Small" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    
+    <style name="ShapeAppearance.PesaLoan.Medium" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    
+    <style name="ShapeAppearance.PesaLoan.Large" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+    
+    <!-- Button styles -->
+    <style name="Widget.PesaLoan.Button.Primary" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/primary_green</item>
+        <item name="textColor">@color/white</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    
+    <style name="Widget.PesaLoan.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="strokeColor">@color/primary_green</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="android:textColor">@color/primary_green</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:minHeight">52dp</item>
+    </style>
+    
+    <style name="Widget.PesaLoan.Button.Danger" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/error_red</item>
+        <item name="textColor">@color/white</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:minHeight">52dp</item>
+    </style>
+    
+    <!-- Text input style -->
+    <style name="Widget.PesaLoan.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/surface_light</item>
+        <item name="boxStrokeColor">@color/border_light</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxStrokeColorFocused">@color/primary_green</item>
+        <item name="hintTextColor">@color/text_secondary_light</item>
+        <item name="android:textColorHint">@color/text_secondary_light</item>
+        <item name="placeholderTextColor">@color/text_secondary_light</item>
+    </style>
+    
+    <!-- Card style -->
+    <style name="Widget.PesaLoan.Card" parent="Widget.Material3.CardView">
+        <item name="cardBackgroundColor">@color/surface_light</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/border_light</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">16dp</item>
+    </style>
+    
+    <!-- Chip style -->
+    <style name="Widget.PesaLoan.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/primary_green_100</item>
+        <item name="checkedChipBackgroundColor">@color/primary_green</item>
+        <item name="android:textColor">@color/text_primary_light</item>
+        <item name="checkedTextColor">@color/white</item>
+        <item name="chipCornerRadius">20dp</item>
+    </style>
+    
+    <!-- Bottom navigation -->
+    <style name="Widget.PesaLoan.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemIconTint">@color/bottom_nav_selector</item>
+        <item name="itemTextColor">@color/bottom_nav_selector</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.PesaLoan.BottomNavigationView.Indicator</item>
+        <item name="labelVisibilityMode">labeled</item>
+    </style>
+    
+    <style name="Widget.PesaLoan.BottomNavigationView.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/transparent</item>
+    </style>
+    
+    <!-- Tab layout -->
+    <style name="Widget.PesaLoan.TabLayout" parent="Widget.Material3.TabLayout">
+        <item name="tabIndicatorColor">@color/primary_green</item>
+        <item name="tabIndicatorHeight">3dp</item>
+        <item name="tabSelectedTextColor">@color/primary_green</item>
+        <item name="tabTextColor">@color/text_secondary_light</item>
+        <item name="tabTextAppearance">@style/TextAppearance.PesaLoan.Tab</item>
+    </style>
+    
+    <style name="TextAppearance.PesaLoan.Tab" parent="TextAppearance.Material3.LabelLarge">
+        <item name="fontFamily">@font/inter</item>
+        <item name="fontWeight">600</item>
+        <item name="textAllCaps">false</item>
+    </style>
+    
+    <!-- Dialog -->
+    <style name="Theme.PesaLoan.Dialog" parent="Theme.Material3.Dialog">
+        <item name="android:windowBackground">@color/surface_light</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PesaLoan.Large</item>
+    </style>
+    
+    <!-- Snackbar -->
+    <style name="Widget.PesaLoan.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="backgroundTint">@color/text_primary_light</item>
+        <item name="actionTextColor">@color/accent_orange</item>
+    </style>
+    
+    <!-- Progress indicators -->
+    <style name="Widget.PesaLoan.CircularProgressIndicator" parent="Widget.Material3.CircularProgressIndicator">
+        <item name="indicatorColor">@color/primary_green</item>
+        <item name="trackColor">@color/primary_green_100</item>
+    </style>
+    
+    <style name="Widget.PesaLoan.LinearProgressIndicator" parent="Widget.Material3.LinearProgressIndicator">
+        <item name="indicatorColor">@color/primary_green</item>
+        <item name="trackColor">@color/primary_green_100</item>
+    </style>
+</resources>

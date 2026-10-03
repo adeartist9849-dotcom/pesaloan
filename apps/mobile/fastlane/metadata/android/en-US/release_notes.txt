@@ -1,0 +1,31 @@
+Version 1.0.0 - Initial Release
+
+✨ New Features:
+• Instant loan application and approval
+• Transparent pricing with upfront cost breakdown
+• M-Pesa and Airtel Money integration for disbursement and repayment
+• KYC verification with National ID
+• Biometric authentication (Fingerprint / Face)
+• Real-time loan tracking and repayment scheduling
+• Push notifications for loan updates and reminders
+• Bank-grade security with end-to-end encryption
+
+🔒 Security:
+• Bank-grade AES-256 encryption
+• Secure PIN and biometric authentication
+• Certificate pinning for API communications
+• OTP-based phone verification
+• Secure storage for sensitive data
+
+🇰🇪 Built for Kenya:
+• Licensed digital credit provider
+• Data Protection Act compliant
+• M-Pesa and Airtel Money integration
+• Support for Kenyan National ID verification
+• KES currency support
+• Local customer support
+
+🐛 Bug Fixes:
+• Initial release - no previous bugs to fix
+
+We're excited to bring you PesaLoan! Your feedback helps us improve. Contact us at support@pesaloan.co.ke

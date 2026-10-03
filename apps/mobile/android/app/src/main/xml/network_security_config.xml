@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext for local development only -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.pesaloan.co.ke</domain>
+        <domain includeSubdomains="true">pesaloan.co.ke</domain>
+        <domain includeSubdomains="true">sandbox.safaricom.co.ke</domain>
+        <domain includeSubdomains="true">api.safaricom.co.ke</domain>
+        <domain includeSubdomains="true">openapi-sandbox.airtel.africa</domain>
+        <domain includeSubdomains="true">openapi.airtel.africa</domain>
+        
+        <pin-set expiration="2026-12-31">
+            <!-- Add your certificate pins here -->
+            <!-- <pin digest="SHA-256">base64_encoded_sha256_pin</pin> -->
+        </pin-set>
+        
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Allow localhost for development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain>10.0.2.2</domain>
+        <domain>localhost</domain>
+        <domain>127.0.0.1</domain>
+    </domain-config>
+
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name -->
+    <string name="app_name">PesaLoan</string>
+    
+    <!-- Launch screen -->
+    <string name="launch_screen_title">PesaLoan</string>
+    
+    <!-- Permissions rationale -->
+    <string name="permission_camera_rationale">We need camera access to capture your ID documents for KYC verification.</string>
+    <string name="permission_storage_rationale">We need storage access to save and upload your KYC documents.</string>
+    <string name="permission_biometric_rationale">We use biometric authentication to secure your account and authorize transactions.</string>
+    <string name="permission_notification_rationale">We send important notifications about your loans, repayments, and account security.</string>
+    
+    <!-- Network security -->
+    <string name="network_error">Network error. Please check your connection and try again.</string>
+    <string name="server_error">Server error. Please try again later.</string>
+    
+    <!-- M-Pesa -->
+    <string name="mpesa_stk_push_title">Enter M-Pesa PIN</string>
+    <string name="mpesa_stk_push_message">Please enter your M-Pesa PIN on your phone to complete the transaction.</string>
+    
+    <!-- Biometric -->
+    <string name="biometric_title">Biometric Authentication</string>
+    <string name="biometric_subtitle">Use your fingerprint or face to authenticate</string>
+    <string name="biometric_fallback">Use PIN instead</string>
+    
+    <!-- Errors -->
+    <string name="error_generic">An unexpected error occurred</string>
+    <string name="error_network">Network connection failed</string>
+    <string name="error_timeout">Request timed out</string>
+    <string name="error_unauthorized">Session expired. Please log in again.</string>
+    
+    <!-- App info -->
+    <string name="privacy_policy_url">https://pesaloan.co.ke/privacy</string>
+    <string name="terms_of_service_url">https://pesaloan.co.ke/terms</string>
+    <string name="loan_agreement_url">https://pesaloan.co.ke/loan-agreement</string>
+    <string name="support_email">support@pesaloan.co.ke</string>
+    <string name="support_phone">+254700000000</string>
+</resources>

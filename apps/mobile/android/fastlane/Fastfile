@@ -1,0 +1,135 @@
+# Fastlane configuration for Android
+# Run with: bundle exec fastlane android <lane>
+
+default_platform(:android)
+
+platform :android do
+  desc "Build and deploy to internal testing track"
+  lane :internal do
+    # Increment version code
+    increment_version_code(
+      gradle_file_path: "app/build.gradle.kts"
+    )
+    
+    # Build AAB
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      properties: {
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["ANDROID_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"],
+      }
+    )
+    
+    # Upload to Play Console internal testing
+    upload_to_play_store(
+      track: 'internal',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      json_key: ENV["GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"],
+      skip_upload_apk: true,
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false
+    )
+    
+    # Notify team
+    slack(
+      message: "PesaLoan Android build #{lane_context[SharedValues::GRADLE_VERSION_NAME]} (#{lane_context[SharedValues::GRADLE_VERSION_CODE]}) deployed to internal testing",
+      success: true,
+      slack_url: ENV["SLACK_WEBHOOK_URL"]
+    )
+  end
+
+  desc "Build and deploy to beta testing track"
+  lane :beta do
+    increment_version_code(
+      gradle_file_path: "app/build.gradle.kts"
+    )
+    
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      properties: {
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["ANDROID_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"],
+      }
+    )
+    
+    upload_to_play_store(
+      track: 'beta',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      json_key: ENV["GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"],
+      skip_upload_apk: true
+    )
+  end
+
+  desc "Build and deploy to production"
+  lane :production do
+    # Ensure version is set correctly
+    ensure_git_status_clean
+    
+    increment_version_code(
+      gradle_file_path: "app/build.gradle.kts"
+    )
+    
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      properties: {
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["ANDROID_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"],
+      }
+    )
+    
+    upload_to_play_store(
+      track: 'production',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      json_key: ENV["GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"],
+      skip_upload_apk: true,
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      validate_only: false
+    )
+    
+    # Create git tag
+    add_git_tag(
+      tag: "android-v#{lane_context[SharedValues::GRADLE_VERSION_NAME]}"
+    )
+    
+    push_git_tags
+  end
+
+  desc "Build APK for testing"
+  lane :build_apk do
+    gradle(
+      task: "assemble",
+      build_type: "Release"
+    )
+  end
+
+  desc "Run tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Generate signed APK for distribution"
+  lane :signed_apk do
+    gradle(
+      task: "assemble",
+      build_type: "Release",
+      properties: {
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
+        "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["ANDROID_KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"],
+      }
+    )
+  end
+end

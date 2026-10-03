@@ -1,0 +1,197 @@
+# Fastlane configuration for iOS
+# Run with: bundle exec fastlane ios <lane>
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and deploy to TestFlight (internal testing)"
+  lane :beta do
+    # Ensure we're on the right branch
+    ensure_git_branch(branch: 'main')
+    ensure_git_status_clean
+    
+    # Increment build number
+    increment_build_number(xcodeproj: "Runner.xcodeproj")
+    
+    # Build the app
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "com.pesaloan.app" => "PesaLoan App Store"
+        }
+      }
+    )
+    
+    # Upload to TestFlight
+    upload_to_testflight(
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
+      skip_waiting_for_build_processing: false,
+      distribute_external: false,
+      notify_external_testers: false,
+      groups: ["Internal Testers"]
+    )
+    
+    # Notify team
+    slack(
+      message: "PesaLoan iOS build #{get_version_number} (#{get_build_number}) uploaded to TestFlight",
+      success: true,
+      slack_url: ENV["SLACK_WEBHOOK_URL"]
+    )
+    
+    # Commit version bump
+    commit_version_bump(
+      message: "Bump build number to #{get_build_number}",
+      xcodeproj: "Runner.xcodeproj"
+    )
+    
+    push_to_git_remote
+  end
+
+  desc "Build and deploy to TestFlight (external testing)"
+  lane :external do
+    ensure_git_branch(branch: 'main')
+    ensure_git_status_clean
+    
+    increment_build_number(xcodeproj: "Runner.xcodeproj")
+    
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store"
+    )
+    
+    upload_to_testflight(
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
+      distribute_external: true,
+      groups: ["External Testers"],
+      notify_external_testers: true,
+      changelog: "New features and bug fixes"
+    )
+  end
+
+  desc "Build and deploy to App Store"
+  lane :release do
+    ensure_git_branch(branch: 'main')
+    ensure_git_status_clean
+    
+    # Ensure version is set
+    version = get_version_number(xcodeproj: "Runner.xcodeproj")
+    UI.message("Releasing version #{version}")
+    
+    increment_build_number(xcodeproj: "Runner.xcodeproj")
+    
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store"
+    )
+    
+    upload_to_app_store(
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
+      skip_binary_upload: false,
+      skip_metadata: false,
+      skip_screenshots: false,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      submission_information: {
+        export_compliance_encryption_updated: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_is_exempt: true,
+        export_compliance_contains_third_party_cryptography: false,
+        export_compliance_contains_proprietary_cryptography: false,
+        add_id_info_uses_idfa: false,
+        add_id_info_serves_ads: false,
+        add_id_info_tracks_action: false,
+        add_id_info_tracks_install: false,
+        add_id_info_limits_tracking: true
+      }
+    )
+    
+    # Create git tag
+    add_git_tag(
+      tag: "ios-v#{get_version_number}-b#{get_build_number}"
+    )
+    
+    push_git_tags
+    push_to_git_remote
+  end
+
+  desc "Build for development/testing"
+  lane :build do
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "development",
+      configuration: "Debug"
+    )
+  end
+
+  desc "Run tests"
+  lane :test do
+    run_tests(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      devices: ["iPhone 15"],
+      clean: true
+    )
+  end
+
+  desc "Setup certificates and profiles"
+  lane :certs do
+    match(
+      type: "appstore",
+      app_identifier: "com.pesaloan.app",
+      git_url: ENV["MATCH_GIT_URL"],
+      git_branch: ENV["MATCH_GIT_BRANCH"] || "main",
+      readonly: true
+    )
+  end
+
+  desc "Setup development certificates"
+  lane :dev_certs do
+    match(
+      type: "development",
+      app_identifier: "com.pesaloan.app",
+      git_url: ENV["MATCH_GIT_URL"],
+      git_branch: ENV["MATCH_GIT_BRANCH"] || "main",
+      readonly: false
+    )
+  end
+
+  desc "Setup App Store screenshots"
+  lane :screenshots do
+    capture_screenshots(
+      scheme: "Runner",
+      output_directory: "./fastlane/screenshots",
+      clear_previous_screenshots: true,
+      languages: ["en-US"],
+      devices: [
+        "iPhone 15 Pro Max",
+        "iPhone 15 Pro",
+        "iPhone 15",
+        "iPhone 15 Plus"
+      ],
+      launch_arguments: ["-UITest_ScreenshotMode"]
+    )
+  end
+
+  desc "Setup certificates for CI"
+  lane :ci_certs do
+    match(
+      type: "appstore",
+      app_identifier: "com.pesaloan.app",
+      git_url: ENV["MATCH_GIT_URL"],
+      git_branch: ENV["MATCH_GIT_BRANCH"] || "main",
+      readonly: true,
+      api_key: {
+        key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+        key: ENV["APP_STORE_CONNECT_API_KEY"]
+      }
+    )
+  end
+end

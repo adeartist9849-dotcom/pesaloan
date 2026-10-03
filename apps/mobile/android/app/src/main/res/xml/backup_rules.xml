@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Exclude sensitive data from backups -->
+    <exclude domain="sharedpref" path="flutter_secure_storage" />
+    <exclude domain="sharedpref" path="auth_tokens" />
+    <exclude domain="sharedpref" path="user_profile" />
+    <exclude domain="sharedpref" path="biometric_enabled" />
+    <exclude domain="sharedpref" path="pin_hash" />
+    <exclude domain="sharedpref" path="encryption_keys" />
+    <exclude domain="file" path="databases" />
+    <exclude domain="file" path="hive" />
+    <exclude domain="file" path="flutter_secure_storage" />
+    <exclude domain="database" path="pesaloan.db" />
+    <exclude domain="database" path="hive_boxes" />
+</full-backup-content>
